@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo</title>
+</head>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<style>
+    .button
+    {
+        padding: 5px;
+        margin: 2px;
+    }
+    body
+    {
+        margin: 20px;
+    }
+    .container
+    {
+        border: 2px solid black;
+        padding:20px;
+        
+    }
+    h3{
+        font-weight: bold;
+    }
+</style>
+<body>
+    <div class="container">
+        <h3>To-do List</h3>
+    <form method="post" onsubmit="SubmitForm(event)">
+        <div>
+            <label for="item">Todo thing</label>
+            <input type="text" id="Todo" name="Todo" placeholder="what do you want to do?"></br>
+            <label for="price">Description</label>
+            <input type="text" id="Description" name="Description" placeholder="requirements"></br>
+               <button type="submit">Add Item</button>
+        </div>
+        <div>
+            <ul id="ul">
+            </ul>
+        </div>
+        <div id="things_done">
+           <h5>Things done:</h2>
+        </div>
+        <div id="things_remaining">
+          <h5>Things remaining:</h2>
+        </div>
+    </form>
+</div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+    <script>
+         const url = "http://localhost:3001/todo";
+       async function SubmitForm(event)
+        {
+            event.preventDefault();
+        const Todo=document.getElementById("Todo").value;
+        const Description=document.getElementById("Description").value;
+        let obj={
+            Todo,Description
+        };
+        
+        try {
+            const postedData = await axios.post(url,obj);
+            //runtime id
+            console.log("sheetal",postedData.data)
+            obj.id = postedData.data.TodoList.id;
+            showDetails(obj);
+          console.log(postedData.data);
+        } catch (error) {
+          console.log("this is axios post error", error);
+        }      
+    }
+    window.addEventListener("DOMContentLoaded", async () => {
+        try {
+          const getData = await axios.get(url);
+          console.log("data fetched successfully", getData.data.allproduct);
+          data=getData.data.allproduct;   
+                    data.forEach(singledata => {
+            showDetails(singledata)
+          });
+        } catch (err) {
+          console.log("cant get data", err);
+        }
+      });
+
+      function showDetails(obj) {
+        const parent = document.getElementById("ul");
+        const child = document.createElement("li");
+        console.log(obj);
+        child.textContent = `todo:${obj.Todo},desc:${obj.Description}`;
+        parent.appendChild(child);
+
+       
+          //done button
+    const done_btn = document.createElement("input");
+          done_btn.type = "button";
+          done_btn.value="✔"
+          done_btn.className="btn btn-success btn-sm button";
+          done_btn.innerHTML='<span aria-hidden="true">&check;</span>';
+        child.appendChild(done_btn);
+
+        done_btn.onclick = async () => {
+          const res = await axios.delete(`${url}/${obj.id}`);
+          console.log("done", res.data);
+          parent.removeChild(child);
+          const things_done =document.getElementById("things_done");
+          things_done.appendChild(child);
+          child.removeChild(done_btn)
+        };
+
+         // delete button;
+         const btn = document.createElement("input");
+        btn.type = "button";
+        btn.value = "X";
+        btn.className = "btn btn-danger btn-sm button";
+        btn.innerHTML = '<span aria-hidden="true">&times;</span>';
+        
+        child.appendChild(btn);
+  
+        btn.onclick = async () => {
+          const res = await axios.delete(`${url}/${obj.id}`);
+          console.log("deleted", res.data);
+        parent.removeChild(child);
+          const things_remaining=document.getElementById("things_remaining");
+          things_remaining.appendChild(child);
+          child.removeChild(btn);
+
+        }
+      }
+    
+    </script>
+    </body>
+    </html>
